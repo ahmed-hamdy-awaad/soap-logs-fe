@@ -16,7 +16,7 @@ interface MockPayload {
 }
 
 export const InsertLog: React.FC = () => {
-  const { user } = useAuth();
+  const { user, apiFetch } = useAuth();
   const [selectedService, setSelectedService] = useState<'Payment' | 'Order' | 'User' | 'Email' | 'Inventory'>('Payment');
   const [outcome, setOutcome] = useState<'success' | 'failure'>('success');
   const [currentMock, setCurrentMock] = useState<MockPayload | null>(null);
@@ -302,12 +302,9 @@ export const InsertLog: React.FC = () => {
     setSending(true);
 
     try {
-      const response = await fetch('http://localhost:5234/api/logs', {
+      const response = await apiFetch('http://localhost:5234/api/logs', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(currentMock)
       });
 

@@ -19,7 +19,7 @@ interface SoapLog {
 export const EditLog: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, apiFetch } = useAuth();
 
   const [log, setLog] = useState<SoapLog | null>(null);
   const [status, setStatus] = useState('Pending');
@@ -40,9 +40,7 @@ export const EditLog: React.FC = () => {
 
     const fetchLogDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:5234/api/logs/${id}`, {
-          headers: { 'Authorization': `Bearer ${user?.token}` }
-        });
+        const response = await apiFetch(`http://localhost:5234/api/logs/${id}`);
 
         if (!response.ok) {
           throw new Error('Could not retrieve log transaction details.');
@@ -69,12 +67,9 @@ export const EditLog: React.FC = () => {
     setError(null);
 
     try {
-      const response = await fetch(`http://localhost:5234/api/logs/${id}`, {
+      const response = await apiFetch(`http://localhost:5234/api/logs/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, notes, tags })
       });
 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 interface User {
   username: string;
@@ -12,6 +12,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,12 +43,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser({ token, username, role });
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('soap_token');
     localStorage.removeItem('soap_username');
     localStorage.removeItem('soap_role');
     setUser(null);
-  };
+  }, []);
+
+  const userRef = useRef(user);
+  useEffect(() => { userRef.current = user; }, [user]);
+
+  const apiFetch = useCallback(async (input: RequestInfo, init?: RequestInit): Promise<Response> => {
+    const token = userRef.current?.token;
+    const headers = new Headers(init?.headers);
+    if (token) headers.set('Authorization', `Bearer ${token}`);
+    const response = await fetch(input, { ...init, headers });
+    if (response.status === 401) {
+      logout();
+      window.location.href = '/login';
+    }
+    return response;
+  }, [logout]);
 
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'Admin';
@@ -61,7 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isAdmin, apiFetch }}>
       {children}
     </AuthContext.Provider>
   );

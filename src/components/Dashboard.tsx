@@ -28,7 +28,7 @@ interface Metadata {
 }
 
 export const Dashboard: React.FC = () => {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, apiFetch } = useAuth();
   const navigate = useNavigate();
 
   // Logs state
@@ -61,9 +61,7 @@ export const Dashboard: React.FC = () => {
 
   const fetchMetadata = async () => {
     try {
-      const response = await fetch('http://localhost:5234/api/logs/metadata', {
-        headers: { 'Authorization': `Bearer ${user?.token}` }
-      });
+      const response = await apiFetch('http://localhost:5234/api/logs/metadata');
       if (response.ok) {
         const data = await response.json();
         setMetadata(data);
@@ -88,9 +86,7 @@ export const Dashboard: React.FC = () => {
       if (customStatus) params.append('customStatus', customStatus);
       if (xmlSearch) params.append('xmlSearch', xmlSearch);
 
-      const response = await fetch(`http://localhost:5234/api/logs?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${user?.token}` }
-      });
+      const response = await apiFetch(`http://localhost:5234/api/logs?${params.toString()}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -158,9 +154,7 @@ export const Dashboard: React.FC = () => {
     // and trigger browser download or perform window open if CORS allows. A clean fetch blob is best!
     showToast(`Generating ${format.toUpperCase()} export...`, 'info');
     
-    fetch(downloadUrl, {
-      headers: { 'Authorization': `Bearer ${user?.token}` }
-    })
+    apiFetch(downloadUrl)
     .then(response => {
       if (!response.ok) throw new Error('Export failed');
       return response.blob();
