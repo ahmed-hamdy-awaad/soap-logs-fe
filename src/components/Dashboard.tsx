@@ -41,8 +41,17 @@ export const Dashboard: React.FC = () => {
   // Filters state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - 6);
+    start.setHours(0, 0, 0, 0);
+    return start.toISOString().slice(0, 16);
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    return end.toISOString().slice(0, 16);
+  });
   const [serviceName, setServiceName] = useState('');
   const [operationName, setOperationName] = useState('');
   const [httpStatus, setHttpStatus] = useState('');
@@ -137,15 +146,19 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleResetFilters = () => {
-    setStartDate('');
-    setEndDate('');
+    const start = new Date();
+    start.setDate(start.getDate() - 6);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    setStartDate(start.toISOString().slice(0, 16));
+    setEndDate(end.toISOString().slice(0, 16));
     setServiceName('');
     setOperationName('');
     setHttpStatus('');
     setCustomStatus('');
     setXmlSearch('');
     setPage(1);
-    // Timeout to allow state to clear before invoking fetchLogs
     setTimeout(() => fetchLogs(), 50);
   };
 
