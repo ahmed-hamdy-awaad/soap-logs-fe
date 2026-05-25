@@ -16,7 +16,7 @@ interface MockPayload {
 }
 
 export const InsertLog: React.FC = () => {
-  const { user, apiFetch } = useAuth();
+  const { user, apiFetch, setGlobalLoading } = useAuth();
   const [selectedService, setSelectedService] = useState<'Payment' | 'Order' | 'User' | 'Email' | 'Inventory'>('Payment');
   const [outcome, setOutcome] = useState<'success' | 'failure'>('success');
   const [currentMock, setCurrentMock] = useState<MockPayload | null>(null);
@@ -306,6 +306,8 @@ export const InsertLog: React.FC = () => {
   const handleSend = async () => {
     if (!currentMock) return;
     setSending(true);
+    setGlobalLoading(true);
+    setError(null);
 
     try {
       const response = await apiFetch('http://localhost:5234/api/logs', {
@@ -325,6 +327,7 @@ export const InsertLog: React.FC = () => {
       setError(err.message || 'Network error. Could not reach the backend.');
     } finally {
       setSending(false);
+      setGlobalLoading(false);
     }
   };
 

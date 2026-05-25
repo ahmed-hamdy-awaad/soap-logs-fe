@@ -8,12 +8,13 @@ export const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, setGlobalLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    setGlobalLoading(true);
 
     try {
       let response: Response;
@@ -38,6 +39,7 @@ export const Login: React.FC = () => {
       setError(err.message || 'An error occurred during authentication.');
     } finally {
       setLoading(false);
+      setGlobalLoading(false);
     }
   };
 

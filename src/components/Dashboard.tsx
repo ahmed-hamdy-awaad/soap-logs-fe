@@ -28,14 +28,13 @@ interface Metadata {
 }
 
 export const Dashboard: React.FC = () => {
-  const { user, isAdmin, apiFetch } = useAuth();
+  const { user, isAdmin, apiFetch, setGlobalLoading } = useAuth();
   const navigate = useNavigate();
 
   // Logs state
   const [logs, setLogs] = useState<SoapLog[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
 
   // Filters state
   const [page, setPage] = useState(1);
@@ -68,6 +67,7 @@ export const Dashboard: React.FC = () => {
   const showError = (message: string) => setError(message);
 
   const fetchMetadata = async () => {
+    setGlobalLoading(true);
     try {
       const response = await apiFetch('http://localhost:5234/api/logs/metadata');
       if (!response.ok) {
@@ -78,11 +78,13 @@ export const Dashboard: React.FC = () => {
       setMetadata(data);
     } catch (err: any) {
       showError(err.message || 'Failed to load filter options.');
+    } finally {
+      setGlobalLoading(false);
     }
   };
 
   const fetchLogs = async () => {
-    setLoading(true);
+    setGlobalLoading(true);
     setError(null);
     try {
       const params = new URLSearchParams();
@@ -109,7 +111,7 @@ export const Dashboard: React.FC = () => {
     } catch (err: any) {
       showError(err.message || 'Failed to fetch logs.');
     } finally {
-      setLoading(false);
+      setGlobalLoading(false);
     }
   };
 
@@ -144,8 +146,11 @@ export const Dashboard: React.FC = () => {
     setTimeout(() => fetchLogs(), 50);
   };
 
+  const [exporting, setExporting] = useState(false);
+
   // Helper to trigger API downloads
   const handleExport = (format: 'csv' | 'excel') => {
+    setGlobalLoading(true);
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', new Date(startDate).toISOString());
     if (endDate) params.append('endDate', new Date(endDate).toISOString());
@@ -182,7 +187,8 @@ export const Dashboard: React.FC = () => {
     })
     .catch(async (err) => {
       showError(err.message || 'Export failed. Please try again.');
-    });
+    })
+    .finally(() => setGlobalLoading(false));
   };
 
   // Prettify XML helper
@@ -257,7 +263,7 @@ export const Dashboard: React.FC = () => {
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={() => fetchLogs()} className="btn btn-secondary" title="Refresh Log Table">
-            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+            <RefreshCw size={18} />
           </button>
           <button onClick={() => handleExport('excel')} className="btn btn-secondary" style={{ borderColor: '#22c55e' }}>
             <FileSpreadsheet size={18} style={{ color: '#22c55e' }} />
@@ -308,7 +314,7 @@ export const Dashboard: React.FC = () => {
               value={serviceName} 
               onChange={(e) => {
                 setServiceName(e.target.value);
-                setOperationName(''); // Reset operations on change
+                setOperationName('');
               }}
             >
               <option value="">All Services</option>
@@ -385,12 +391,7 @@ export const Dashboard: React.FC = () => {
 
       {/* Logs Table */}
       <div className="table-container">
-        {loading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', gap: '15px' }}>
-            <div className="animate-spin" style={{ width: '40px', height: '40px', border: '3px solid rgba(59, 130, 246, 0.1)', borderTopColor: '#3b82f6', borderRadius: '50%' }}></div>
-            <div style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Fetching log transactions...</div>
-          </div>
-        ) : logs.length === 0 ? (
+        {logs.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', textAlign: 'center' }}>
             <div style={{ color: 'var(--text-muted)', marginBottom: '12px' }}>
               <Activity size={48} />

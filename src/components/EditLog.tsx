@@ -19,14 +19,13 @@ interface SoapLog {
 export const EditLog: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user, isAdmin, apiFetch } = useAuth();
+  const { user, isAdmin, apiFetch, setGlobalLoading } = useAuth();
 
   const [log, setLog] = useState<SoapLog | null>(null);
   const [status, setStatus] = useState('Pending');
   const [notes, setNotes] = useState('');
   const [tags, setTags] = useState('');
 
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -39,6 +38,7 @@ export const EditLog: React.FC = () => {
     }
 
     const fetchLogDetails = async () => {
+      setGlobalLoading(true);
       try {
         const response = await apiFetch(`http://localhost:5234/api/logs/${id}`);
 
@@ -55,7 +55,7 @@ export const EditLog: React.FC = () => {
       } catch (err: any) {
         setError(err.message || 'Error fetching details.');
       } finally {
-        setLoading(false);
+        setGlobalLoading(false);
       }
     };
 
@@ -65,6 +65,7 @@ export const EditLog: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setGlobalLoading(true);
     setError(null);
 
     try {
@@ -87,6 +88,7 @@ export const EditLog: React.FC = () => {
     } catch (err: any) {
       setError(err.message || 'Error occurred saving updates.');
       setSaving(false);
+      setGlobalLoading(false);
     }
   };
 
@@ -96,14 +98,6 @@ export const EditLog: React.FC = () => {
         <ShieldAlert size={64} style={{ color: '#ef4444', marginBottom: '16px' }} />
         <h2>Access Denied</h2>
         <p style={{ color: 'var(--text-secondary)' }}>You must be logged in as an Administrator to modify log configurations.</p>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
-        <div className="animate-spin" style={{ width: '40px', height: '40px', border: '3px solid rgba(59, 130, 246, 0.1)', borderTopColor: '#3b82f6', borderRadius: '50%' }}></div>
       </div>
     );
   }

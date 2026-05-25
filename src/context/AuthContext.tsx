@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { LoadingOverlay } from '../components/LoadingOverlay';
 
 interface User {
   username: string;
@@ -13,6 +14,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   apiFetch: (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+  setGlobalLoading: (loading: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [globalLoading, setGlobalLoading] = useState(false);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('soap_token');
@@ -81,7 +84,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isAdmin, apiFetch }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isAdmin, apiFetch, setGlobalLoading }}>
+      {globalLoading && <LoadingOverlay />}
       {children}
     </AuthContext.Provider>
   );
