@@ -24,7 +24,7 @@ export const Login: React.FC = () => {
 
       if (!response.ok) {
         const errData = await response.json();
-        throw new Error(errData.message || 'Login failed. Please check credentials.');
+        throw new Error(errData.Message || errData.message || 'Login failed. Please check credentials.');
       }
 
       const data = await response.json();

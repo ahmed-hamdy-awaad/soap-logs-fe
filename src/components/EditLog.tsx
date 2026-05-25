@@ -43,7 +43,8 @@ export const EditLog: React.FC = () => {
         const response = await apiFetch(`http://localhost:5234/api/logs/${id}`);
 
         if (!response.ok) {
-          throw new Error('Could not retrieve log transaction details.');
+          const errData = await response.json();
+          throw new Error(errData.message || 'Could not retrieve log transaction details.');
         }
 
         const data = await response.json();

@@ -57,24 +57,30 @@ export const Dashboard: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   // Notification toast
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const fetchMetadata = async () => {
     try {
       const response = await apiFetch('http://localhost:5234/api/logs/metadata');
-      if (response.ok) {
-        const data = await response.json();
-        setMetadata(data);
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Failed to load filter options.');
       }
-    } catch (err) {
-      console.error('Error fetching metadata', err);
+      const data = await response.json();
+      setMetadata(data);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to load filter options.', 'error');
     }
   };
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      // Build query string
       const params = new URLSearchParams();
       params.append('page', page.toString());
       params.append('pageSize', pageSize.toString());
@@ -88,14 +94,16 @@ export const Dashboard: React.FC = () => {
 
       const response = await apiFetch(`http://localhost:5234/api/logs?${params.toString()}`);
 
-      if (response.ok) {
-        const data = await response.json();
-        setLogs(data.items);
-        setTotalItems(data.totalItems);
-        setTotalPages(data.totalPages);
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Failed to fetch logs.');
       }
-    } catch (err) {
-      console.error('Error fetching logs', err);
+      const data = await response.json();
+      setLogs(data.items);
+      setTotalItems(data.totalItems);
+      setTotalPages(data.totalPages);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to fetch logs.', 'error');
     } finally {
       setLoading(false);
     }
@@ -132,11 +140,6 @@ export const Dashboard: React.FC = () => {
     setTimeout(() => fetchLogs(), 50);
   };
 
-  const showToast = (message: string, type: 'success' | 'info' = 'info') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
   // Helper to trigger API downloads
   const handleExport = (format: 'csv' | 'excel') => {
     const params = new URLSearchParams();
@@ -155,8 +158,11 @@ export const Dashboard: React.FC = () => {
     showToast(`Generating ${format.toUpperCase()} export...`, 'info');
     
     apiFetch(downloadUrl)
-    .then(response => {
-      if (!response.ok) throw new Error('Export failed');
+    .then(async response => {
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.message || 'Export failed.');
+      }
       return response.blob();
     })
     .then(blob => {
@@ -170,9 +176,8 @@ export const Dashboard: React.FC = () => {
       window.URL.revokeObjectURL(url);
       showToast('Logs exported successfully!', 'success');
     })
-    .catch(err => {
-      console.error(err);
-      showToast('Export failed. Please try again.', 'info');
+    .catch(async (err) => {
+      showToast(err.message || 'Export failed. Please try again.', 'error');
     });
   };
 
@@ -668,7 +673,7 @@ export const Dashboard: React.FC = () => {
             width: '8px',
             height: '8px',
             borderRadius: '50%',
-            background: toast.type === 'success' ? '#10b981' : '#3b82f6'
+            background: toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#ef4444' : '#3b82f6'
           }}></div>
           <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{toast.message}</span>
         </div>

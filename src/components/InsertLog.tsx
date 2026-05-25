@@ -21,7 +21,12 @@ export const InsertLog: React.FC = () => {
   const [outcome, setOutcome] = useState<'success' | 'failure'>('success');
   const [currentMock, setCurrentMock] = useState<MockPayload | null>(null);
   const [sending, setSending] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // XML prettifier for preview
   const formatXml = (xmlStr: string) => {
@@ -309,18 +314,14 @@ export const InsertLog: React.FC = () => {
       });
 
       if (response.ok) {
-        setToast('SOAP Log Simulated & Sent Successfully!');
-        setTimeout(() => setToast(null), 3000);
-        // Regeneate
+        showToast('SOAP Log Simulated & Sent Successfully!', 'success');
         generateMockPayload();
       } else {
-        setToast('Failed to insert log API endpoint.');
-        setTimeout(() => setToast(null), 3000);
+        const errData = await response.json();
+        showToast(errData.message || 'Failed to insert log.', 'error');
       }
-    } catch (err) {
-      console.error(err);
-      setToast('Network error simulator backend.');
-      setTimeout(() => setToast(null), 3000);
+    } catch (err: any) {
+      showToast(err.message || 'Network error. Could not reach the backend.', 'error');
     } finally {
       setSending(false);
     }
@@ -495,9 +496,9 @@ export const InsertLog: React.FC = () => {
             width: '8px',
             height: '8px',
             borderRadius: '50%',
-            background: toast.includes('Successfully') ? '#10b981' : '#3b82f6'
+            background: toast.type === 'success' ? '#10b981' : '#ef4444'
           }}></div>
-          <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{toast}</span>
+          <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{toast.message}</span>
         </div>
       )}
     </div>
