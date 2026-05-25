@@ -16,11 +16,16 @@ export const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5234/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
+      let response: Response;
+      try {
+        response = await fetch('http://localhost:5234/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+      } catch {
+        throw new Error('Network error. The server is unreachable.');
+      }
 
       if (!response.ok) {
         const errData = await response.json();

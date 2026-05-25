@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Send, Sparkles, CheckCircle2, AlertTriangle, Code } from 'lucide-react';
+import { Send, Sparkles, CheckCircle2, AlertTriangle, Code, AlertCircle, X } from 'lucide-react';
 
 interface MockPayload {
   serviceName: string;
@@ -21,6 +21,7 @@ export const InsertLog: React.FC = () => {
   const [outcome, setOutcome] = useState<'success' | 'failure'>('success');
   const [currentMock, setCurrentMock] = useState<MockPayload | null>(null);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error') => {
@@ -318,10 +319,10 @@ export const InsertLog: React.FC = () => {
         generateMockPayload();
       } else {
         const errData = await response.json();
-        showToast(errData.message || 'Failed to insert log.', 'error');
+        setError(errData.message || 'Failed to insert log.');
       }
     } catch (err: any) {
-      showToast(err.message || 'Network error. Could not reach the backend.', 'error');
+      setError(err.message || 'Network error. Could not reach the backend.');
     } finally {
       setSending(false);
     }
@@ -333,6 +334,30 @@ export const InsertLog: React.FC = () => {
         <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>SOAP Transaction Simulator</h1>
         <p style={{ color: 'var(--text-secondary)' }}>Generate and dispatch mock SOAP requests to test monitoring filters and export behaviors</p>
       </div>
+
+      {error && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px',
+          background: 'rgba(239, 68, 68, 0.12)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          borderRadius: '8px',
+          padding: '12px 16px',
+          color: '#f87171',
+          fontSize: '0.85rem',
+          marginBottom: '24px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+          <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 0 }}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '24px', alignItems: 'start' }}>
         {/* Code Previews */}
@@ -490,14 +515,9 @@ export const InsertLog: React.FC = () => {
       </div>
 
       {/* Floating toast notification */}
-      {toast && (
+      {toast && toast.type === 'success' && (
         <div className="toast">
-          <div style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: toast.type === 'success' ? '#10b981' : '#ef4444'
-          }}></div>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
           <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{toast.message}</span>
         </div>
       )}

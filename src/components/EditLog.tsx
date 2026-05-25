@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Save, ArrowLeft, ClipboardList, ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { Save, ArrowLeft, ClipboardList, ShieldAlert, CheckCircle2, AlertCircle, X } from 'lucide-react';
 
 interface SoapLog {
   id: number;
@@ -120,6 +120,7 @@ export const EditLog: React.FC = () => {
         <div style={{
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
           gap: '10px',
           background: 'rgba(239, 68, 68, 0.12)',
           border: '1px solid rgba(239, 68, 68, 0.3)',
@@ -129,7 +130,13 @@ export const EditLog: React.FC = () => {
           fontSize: '0.85rem',
           marginBottom: '24px'
         }}>
-          <span>{error}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+          <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 0 }}>
+            <X size={16} />
+          </button>
         </div>
       )}
 

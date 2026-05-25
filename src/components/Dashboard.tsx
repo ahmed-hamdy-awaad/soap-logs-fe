@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   Search, FileSpreadsheet, FileText, Filter, Activity, 
-  Clock, Edit, Eye, Lock, X, Copy, Check, ChevronLeft, ChevronRight, RefreshCw 
+  Clock, Edit, Eye, Lock, X, Copy, Check, ChevronLeft, ChevronRight, RefreshCw, AlertCircle
 } from 'lucide-react';
 
 interface SoapLog {
@@ -57,12 +57,15 @@ export const Dashboard: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   // Notification toast
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  const showToast = (message: string, type: 'success' | 'info' = 'info') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
+
+  const showError = (message: string) => setError(message);
 
   const fetchMetadata = async () => {
     try {
@@ -74,12 +77,13 @@ export const Dashboard: React.FC = () => {
       const data = await response.json();
       setMetadata(data);
     } catch (err: any) {
-      showToast(err.message || 'Failed to load filter options.', 'error');
+      showError(err.message || 'Failed to load filter options.');
     }
   };
 
   const fetchLogs = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       params.append('page', page.toString());
@@ -103,7 +107,7 @@ export const Dashboard: React.FC = () => {
       setTotalItems(data.totalItems);
       setTotalPages(data.totalPages);
     } catch (err: any) {
-      showToast(err.message || 'Failed to fetch logs.', 'error');
+      showError(err.message || 'Failed to fetch logs.');
     } finally {
       setLoading(false);
     }
@@ -177,7 +181,7 @@ export const Dashboard: React.FC = () => {
       showToast('Logs exported successfully!', 'success');
     })
     .catch(async (err) => {
-      showToast(err.message || 'Export failed. Please try again.', 'error');
+      showError(err.message || 'Export failed. Please try again.');
     });
   };
 
@@ -222,6 +226,29 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="main-layout animate-fade-in">
+      {error && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '10px',
+          background: 'rgba(239, 68, 68, 0.12)',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          borderRadius: '8px',
+          padding: '12px 16px',
+          color: '#f87171',
+          fontSize: '0.85rem',
+          marginBottom: '24px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+          <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: 0 }}>
+            <X size={16} />
+          </button>
+        </div>
+      )}
       {/* Upper Statistics Panel */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
@@ -673,7 +700,7 @@ export const Dashboard: React.FC = () => {
             width: '8px',
             height: '8px',
             borderRadius: '50%',
-            background: toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#ef4444' : '#3b82f6'
+            background: toast.type === 'success' ? '#10b981' : '#3b82f6'
           }}></div>
           <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>{toast.message}</span>
         </div>

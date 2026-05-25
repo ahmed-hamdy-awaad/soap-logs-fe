@@ -57,12 +57,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const token = userRef.current?.token;
     const headers = new Headers(init?.headers);
     if (token) headers.set('Authorization', `Bearer ${token}`);
-    const response = await fetch(input, { ...init, headers });
-    if (response.status === 401) {
-      logout();
-      window.location.href = '/login';
+    try {
+      const response = await fetch(input, { ...init, headers });
+      if (response.status === 401) {
+        logout();
+        window.location.href = '/login';
+      }
+      return response;
+    } catch {
+      throw new Error('Network error. The server is unreachable.');
     }
-    return response;
   }, [logout]);
 
   const isAuthenticated = !!user;
