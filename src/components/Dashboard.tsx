@@ -5,6 +5,7 @@ import {
   Search, FileSpreadsheet, FileText, Filter, Activity, 
   Clock, Edit, Eye, Lock, X, Copy, Check, ChevronLeft, ChevronRight, RefreshCw, AlertCircle
 } from 'lucide-react';
+import { StatisticsPanel, type LogStatistics } from './StatisticsPanel';
 
 interface SoapLog {
   id: number;
@@ -35,6 +36,7 @@ export const Dashboard: React.FC = () => {
   const [logs, setLogs] = useState<SoapLog[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [statistics, setStatistics] = useState<LogStatistics | null>(null);
 
   // Filters state
   const [page, setPage] = useState(1);
@@ -108,6 +110,7 @@ export const Dashboard: React.FC = () => {
       setLogs(data.items);
       setTotalItems(data.totalItems);
       setTotalPages(data.totalPages);
+      if (data.statistics) setStatistics(data.statistics);
     } catch (err: any) {
       showError(err.message || 'Failed to fetch logs.');
     } finally {
@@ -276,6 +279,11 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Statistics Panel */}
+      {statistics && (
+        <StatisticsPanel stats={statistics} totalItems={totalItems} />
+      )}
+
       {/* Filters Form */}
       <form onSubmit={handleSearchSubmit} className="glass-panel" style={{ marginBottom: '24px', borderRadius: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid var(--border)', gap: '10px' }}>
@@ -389,8 +397,11 @@ export const Dashboard: React.FC = () => {
         </div>
       </form>
 
-      {/* Logs Table */}
-      <div className="table-container">
+      {/* Table + Pagination + Modal — all scoped inside a relative container */}
+      <div style={{ position: 'relative' }}>
+
+        {/* Logs Table */}
+        <div className="table-container">
         {logs.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 20px', textAlign: 'center' }}>
             <div style={{ color: 'var(--text-muted)', marginBottom: '12px' }}>
@@ -562,7 +573,7 @@ export const Dashboard: React.FC = () => {
       {/* XML Inspector Modal */}
       {selectedLog && (
         <div style={{
-          position: 'fixed',
+          position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
@@ -578,7 +589,8 @@ export const Dashboard: React.FC = () => {
           <div className="glass-panel" style={{
             width: '100%',
             maxWidth: '900px',
-            maxHeight: '90vh',
+            maxHeight: '90%',
+            margin: 'auto',
             display: 'flex',
             flexDirection: 'column',
             borderRadius: '16px',
@@ -693,6 +705,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      </div>{/* end relative table wrapper */}
 
       {/* Floating toast notification */}
       {toast && (
